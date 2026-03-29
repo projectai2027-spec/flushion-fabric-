@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
 from sqlalchemy.sql import func
-from .database import Base
+from database import Base
 
 class StyleGeneration(Base):
     __tablename__ = "style_generations"
@@ -19,4 +19,15 @@ class FeedbackLog(Base):
     id = Column(Integer, primary_key=True, index=True)
     generation_id = Column(Integer, ForeignKey("style_generations.id"))
     is_accepted = Column(Boolean)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class FabricPrompt(Base):
+    __tablename__ = "fabric_prompts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    fabric_id = Column(String, index=True)
+    original_prompt = Column(String)
+    edited_prompt = Column(String)
+    user_instructions = Column(String)
+    fabric_features = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

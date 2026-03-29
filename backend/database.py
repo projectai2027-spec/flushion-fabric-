@@ -1,13 +1,21 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
 
-# Rapid prototyping URL, easily swapped with PostgreSQL URL -> "postgresql://user:password@localhost/flushion_db"
-SQLALCHEMY_DATABASE_URL = "sqlite:///./flushion_ai.db"
+# Primary attempt PostgreSQL database, fallback to Local sqlite
+POSTGRES_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/flushion_db")
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
+try:
+    engine = create_engine(POSTGRES_URL)
+    # FORCE the database connection check
+    connection = engine.connect()
+    connection.close()
+    print("PostgreSQL Prompt Learning Database connected successfully.")
+except Exception as e:
+    print(f"Warning: PostgreSQL prompt-learning connection failed. Ensure pg_ctl is running. Fallback to SQLite. Error: {e}")
+    engine = create_engine("sqlite:///./fallback.db", connect_args={"check_same_thread": False})
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
