@@ -24,12 +24,11 @@ app = FastAPI(title="Flushion Fabric AI")
 # CRITICAL RULES Applied: CORS Enabled internally
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],  # Is "*" ka matlab hai sabhi links allow hain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # Rule: Load API key using os.getenv('GOOGLE_API_KEY')
 genai.configure(api_key=os.getenv('GOOGLE_API_KEY') or os.getenv('GEMINI_API_KEY'))
 
