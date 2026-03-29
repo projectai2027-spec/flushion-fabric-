@@ -89,4 +89,7 @@ async def generate_alternates(req: schemas.GenerateAlternatesRequest):
 # CRITICAL RULES Applied: Use if __name__ == "__main__": to wrap uvicorn.run
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    import os
+    # Render jo port dega wo use karega, nahi toh 10000 use karega
+    port = int(os.environ.get("PORT", 10000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
