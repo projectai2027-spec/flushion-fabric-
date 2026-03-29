@@ -12,7 +12,7 @@ with open(filename, "wb") as f:
 try:
     with open(filename, "rb") as f:
         files = {"file": (filename, f, "image/jpeg")}
-        res = httpx.post("http://localhost:8000/api/generate-prompt", files=files, timeout=30.0)
+    res = httpx.post("https://flushion-fabric.onrender.com/api/generate-prompt", files=files, timeout=30.0)
         print("API Status Code:", res.status_code)
         if res.status_code == 200:
             print("[SUCCESS] Gemini responded:")
