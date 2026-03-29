@@ -5,3 +5,5 @@ python-multipart
 python-dotenv
 pillow
 sqlalchemy
+httpx
+psycopg2-binary
