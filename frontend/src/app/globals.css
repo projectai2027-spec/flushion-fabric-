@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+:root {
+  --background: 15, 15, 17;
+  --foreground: 250, 250, 250;
+  --primary: 225, 29, 72; /* Rose 600 */
+  --secondary: 124, 58, 237; /* Violet 600 */
+}
+
+body {
+  color: rgb(var(--foreground));
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(var(--secondary), 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(var(--primary), 0.12) 0%, transparent 40%),
+    rgb(var(--background));
+  background-attachment: fixed;
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/[0.02] border border-white/10 backdrop-blur-xl shadow-2xl rounded-3xl;
+  }
+  
+  .glass-card {
+    @apply bg-white/[0.015] border border-white/[0.08] backdrop-blur-md rounded-2xl hover:bg-white/[0.05] hover:border-white/[0.12] transition-all duration-300 overflow-hidden;
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-fuchsia-400 to-violet-500;
+  }
+
+  .gradient-border-btn {
+    position: relative;
+    background: linear-gradient(rgba(var(--background), 0.8), rgba(var(--background), 0.8)) padding-box,
+                linear-gradient(to right, rgb(var(--primary)), rgb(var(--secondary))) border-box;
+    border: 1px solid transparent;
+  }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(var(--primary), 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(var(--primary), 0); }
+  100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(var(--primary), 0); }
+}
+
+@keyframes dash {
+  to { stroke-dashoffset: 0; }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+.animate-dash {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: dash 5s linear forwards;
+}
