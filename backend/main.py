@@ -1,11 +1,11 @@
 import os
 import uuid
-import pathlib
-import PIL.Image # Standard Python Image Lib required per official Gemini docs
+import PIL.Image
+import io
 from dotenv import load_dotenv
 
-# Ensure environmental keys are picked up securely
-load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+# Env variables load karne ke liye
+load_dotenv()
 
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,50 +17,57 @@ import schemas
 import database
 import services
 
+# Database tables create karna
 models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="Flushion Fabric AI")
 
-# CRITICAL RULES Applied: CORS Enabled internally
+# CORS Settings: Sabhi origins allow hain taaki Vercel se "Failed to fetch" na aaye
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Is "*" ka matlab hai sabhi links allow hain
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# Rule: Load API key using os.getenv('GOOGLE_API_KEY')
-genai.configure(api_key=os.getenv('GOOGLE_API_KEY') or os.getenv('GEMINI_API_KEY'))
+
+# API Key configuration
+api_key = os.getenv('GOOGLE_API_KEY') or os.getenv('GEMINI_API_KEY')
+genai.configure(api_key=api_key)
+
+@app.get("/")
+async def root():
+    return {"status": "Online", "message": "Flushion Fabric Backend is Running"}
 
 @app.post("/api/generate-prompt", response_model=schemas.GeneratePromptResponse)
 async def generate_prompt(file: UploadFile = File(...), db: Session = Depends(database.get_db)):
-    """
-    Rewritten from scratch logic for Gemini 1.5 Flash natively utilizing google.generativeai
-    """
     fabric_id = str(uuid.uuid4())
-    file_location = f"./temp/{file.filename}"
-    os.makedirs("./temp", exist_ok=True)
     
-    # Save the file temporarily
-    with open(file_location, "wb+") as f:
-        f.write(file.file.read())
-
     try:
-        # Load image via PIL.Image for native python SDK support
-        image_data = PIL.Image.open(file_location)
+        # File ko memory mein hi read karein (Render par temp folder ki jhanjhat khatam)
+        content = await file.read()
+        image_data = PIL.Image.open(io.BytesIO(content))
 
-        # Rule: Set model = genai.GenerativeModel('gemini-1.5-flash')
+        # Gemini Model Setup
         model = genai.GenerativeModel('gemini-1.5-flash')
         
-        prompt = "Analyze this fabric. Output a highly descriptive prompt for image generation, focusing on texture, material, and pattern style."
+        prompt = (
+            "Analyze this fabric. Output a highly descriptive prompt for image generation, "
+            "focus on texture, material, and pattern style. "
+            "The output should be a single paragraph optimized for AI image generators."
+        )
         
-        # Rule: Use response = model.generate_content([prompt, image_data])
+        # Response generate karein
         response = model.generate_content([prompt, image_data])
         
+        if not response.text:
+            raise Exception("Gemini could not generate text for this image.")
+
         return {"suggested_prompt": response.text, "fabric_id": fabric_id}
+        
     except Exception as e:
-        print("Backend Generation Error:", str(e))
-        raise HTTPException(status_code=500, detail=f"Google SDK Error: {str(e)}")
+        print(f"Backend Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"AI Error: {str(e)}")
 
 @app.post("/api/learn-prompt")
 def learn_prompt(req: schemas.LearnPromptRequest, db: Session = Depends(database.get_db)):
@@ -85,10 +92,9 @@ async def generate_alternates(req: schemas.GenerateAlternatesRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Generation Error: {str(e)}")
 
-# CRITICAL RULES Applied: Use if __name__ == "__main__": to wrap uvicorn.run
+# Render Port Binding: Zaroori step
 if __name__ == "__main__":
     import uvicorn
-    import os
-    # Render jo port dega wo use karega, nahi toh 10000 use karega
+    # Render $PORT environment variable use karta hai
     port = int(os.environ.get("PORT", 10000))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
