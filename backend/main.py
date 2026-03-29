@@ -12,7 +12,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 import google.generativeai as genai
+DATABASE_URL = os.getenv("DATABASE_URL")
 
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+engine = create_engine(DATABASE_URL or "sqlite:///./test.db")
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# AB ISKE NICHE AGAR PURANA DATABASE KA CODE HAI TOH USE DELETE KAR DO
+# Phir aapka FastAPI app shuru hoga:
+app = FastAPI()
 import models
 import schemas
 import database
