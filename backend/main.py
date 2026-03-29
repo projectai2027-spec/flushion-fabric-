@@ -9,7 +9,8 @@ load_dotenv()
 
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
 import google.generativeai as genai
 
 import models
@@ -17,8 +18,19 @@ import schemas
 import database
 import services
 
-# Database tables create karna
-models.Base.metadata.create_all(bind=database.engine)
+# --- DATABASE CONNECTION FIX START ---
+# Render ka Environment Variable uthayega
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Render/Postgres fix: postgres:// ko postgresql:// mein badalna zaroori hai
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Agar Render URL nahi milta toh testing ke liye local sqlite banayega
+engine = create_engine(DATABASE_URL or "sqlite:///./test.db")
+database.engine = engine # database file ke engine ko override kar rahe hain
+models.Base.metadata.create_all(bind=engine)
+# --- DATABASE CONNECTION FIX END ---
 
 app = FastAPI(title="Flushion Fabric AI")
 
@@ -44,11 +56,9 @@ async def generate_prompt(file: UploadFile = File(...), db: Session = Depends(da
     fabric_id = str(uuid.uuid4())
     
     try:
-        # File ko memory mein hi read karein (Render par temp folder ki jhanjhat khatam)
         content = await file.read()
         image_data = PIL.Image.open(io.BytesIO(content))
 
-        # Gemini Model Setup
         model = genai.GenerativeModel('gemini-1.5-flash')
         
         prompt = (
@@ -57,7 +67,6 @@ async def generate_prompt(file: UploadFile = File(...), db: Session = Depends(da
             "The output should be a single paragraph optimized for AI image generators."
         )
         
-        # Response generate karein
         response = model.generate_content([prompt, image_data])
         
         if not response.text:
@@ -92,9 +101,7 @@ async def generate_alternates(req: schemas.GenerateAlternatesRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Generation Error: {str(e)}")
 
-# Render Port Binding: Zaroori step
 if __name__ == "__main__":
     import uvicorn
-    # Render $PORT environment variable use karta hai
     port = int(os.environ.get("PORT", 10000))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
