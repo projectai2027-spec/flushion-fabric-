@@ -209,3 +209,26 @@ export default function Home() {
           <div className="w-20 h-20 rounded-full border-t-2 border-violet-500 animate-spin"></div>
           <h2 className="text-2xl font-bold text-white mb-2">Processing API Request...</h2>
           <p className="text-neutral-400 text-sm max-w-md text-center"></p>
+        </div>
+      )}
+
+      {step === "generated_base" && generatedBaseImage && (
+        <div className="z-10 w-full max-w-5xl glass-panel p-8 animate-in fade-in slide-in-from-bottom-8">
+          <h2 className="text-2xl font-bold mb-6 border-b border-white/10 pb-4">🎉 Generated 4K Base Image</h2>
+          <img src={generatedBaseImage} className="w-full aspect-square object-cover rounded-2xl border border-white/10 shadow-lg" />
+        </div>
+      )}
+
+      {step === "alts_ready" && (
+        <div className="z-10 w-full max-w-5xl glass-panel p-8 animate-in fade-in slide-in-from-bottom-8">
+          <h2 className="text-2xl font-bold mb-6 border-b border-white/10 pb-4">🎉 Generated Alternate Images</h2>
+          <div className="flex flex-col gap-4">
+            {generatedAlts.map((alt, index) => (
+              <img key={index} src={alt} className="w-full aspect-square object-cover rounded-2xl border border-white/10 shadow-lg" />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
