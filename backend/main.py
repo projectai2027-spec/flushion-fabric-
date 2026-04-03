@@ -54,7 +54,7 @@ app.add_middleware(
 )
 
 # API Key configuration
-api_key = os.getenv('GOOGLE_API_KEY') or os.getenv('GEMINI_API_KEY')
+api_key = "AIzaSyCEncRlgjq3Tv5k8AQOv9ne1Wmpc2XBORM"
 genai.configure(api_key=api_key)
 
 @app.get("/")
